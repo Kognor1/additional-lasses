@@ -2,6 +2,7 @@
 from LAS import Converter
 import pandas as pd
 import numpy as np
+import re
 class WellData():
     def __init__(self,path,data=None,params=None,del_invalid=False):
         """
@@ -15,6 +16,12 @@ class WellData():
         c= Converter()
         self.log = c.set_file(path)
         params_l=self.log.parameter
+        try:
+            
+            loc = self.log.well["LOC"]["value"]
+            self.well_X,self.well_Y=re.findall(r'\d+\.\d+',loc)
+        except Exception as e:
+            raise Exception('Скорее всего отсутсвует поле loc, либо его формат неверен. Посмотрите stackTrace выше') from e
         if(params!=None):
             self.heads={}
             for key,value in params.items():
