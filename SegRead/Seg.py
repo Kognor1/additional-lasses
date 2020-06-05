@@ -114,6 +114,7 @@ class SegReader():
         start_tp=time()
         for i in range(0,self.count_trace):
             start=time()
+
             b=trace_head.get_all_trace(self.f.read(240), self.order)
             step_count = b["TRACE_SAMPLE_COUNT"]
             all[i]=b.values()
@@ -121,15 +122,13 @@ class SegReader():
             datas = (self.f.read(coef*step_count))
             sample= self.__get_sample(coef,datas)
             data.append(sample)
-
         #print(time()-start_tp)
         self.data= np.array(data)
        # strat = time()
         self.trace_bin_headers = pandas.DataFrame.from_dict(data=all,columns=Heads.TraceBinHead().__dict__.keys(),orient='index')
         self.trace_bin_headers["IDX"]=np.arange(len(self.trace_bin_headers))
        # print(time() -strat)
-        self.trace_bin_headers= self.delete_rows_cols(self.trace_bin_headers)
-        self.trace_bin_headers=self.trace_bin_headers.drop(["spare"],axis=1)
+       # self.trace_bin_headers= self.delete_rows_cols(self.trace_bin_headers)
        
         return self.data ,self.trace_bin_headers
     
@@ -257,34 +256,38 @@ def create_head_traces(dict):
         heads = heads.fillna(0)
         return heads
 def write(filename, Data,SegyTraceHeaders=pandas.DataFrame(), SegyHeader=None, text_head=None,order="big",dt=1000,SampleFormat=3):
-            if(isinstance(SegyTraceHeaders,dict )):
-                SegyTraceHeaders=create_head_traces(SegyTraceHeaders)
-            elif(isinstance(SegyTraceHeaders,pandas.DataFrame)):
+            if (isinstance(SegyTraceHeaders, dict)):
+                SegyTraceHeaders = create_head_traces(SegyTraceHeaders)
+            elif (isinstance(SegyTraceHeaders, pandas.DataFrame)):
                 pass
             else:
                 raise Exception("Not definde type")
-            file = open(filename,"wb")
-            if(SegyHeader==None):
-                bin_head= Heads.BinHead(bytearray(400), order)
+            file = open(filename, "wb")
+            if (SegyHeader == None):
+                bin_head = Heads.BinHead(bytearray(400), order)
+
             else:
-                bin_head=SegyHeader
+                bin_head = SegyHeader
             coef = retCoef(SampleFormat)
-            bin_head.Interval=dt
-            bin_head.Samples = len(Data[0])
-            bin_head.Format= SampleFormat
-            if(text_head!=None):
+            bin_head.Interval = dt
+            try:
+                bh_s = bin_head.Samples
+            except Exception as e:
+                bin_head.Samples = len(Data[0])
+            bin_head.Format = SampleFormat
+            if (text_head != None):
                 file.write(text_head)
-            else :
+            else:
                 file.write(bytearray(3200))
 
-            if(SegyTraceHeaders.empty):
+            if (SegyTraceHeaders.empty):
                 segyTraceHeaders = get_null_trace()
             else:
-                segyTraceHeaders=SegyTraceHeaders
+                segyTraceHeaders = SegyTraceHeaders
 
-            segyTraceHeaders.TRACE_SAMPLE_COUNT = len(Data[0])
+            # segyTraceHeaders.TRACE_SAMPLE_COUNT = len(Data[0])
             Heads.writeBinHead(file, bin_head, order)
-            all_c=bytearray()
+            all_c = bytearray()
             start = time()
             df_dict = segyTraceHeaders.to_dict(orient='index')
             for i in range(0,len(Data)):

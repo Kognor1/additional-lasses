@@ -1,4 +1,5 @@
 import numpy as np
+
 class BinHead():
 
     def __init__(self, list_header_bin,order):
@@ -33,6 +34,7 @@ class BinHead():
         self.Spare = int.from_bytes(list_header_bin[60:401:], order,signed=True)
 
 
+
 class TraceBinHead():
     def __init__(self):
             self.TRACE_SEQUENCE_LINE =[0,4]
@@ -42,10 +44,12 @@ class TraceBinHead():
             self.EnergySourcePoint=[16,4]
             self.CDP=[20,4]
             self.CDP_TRACE=[24,4]
-            self.TraceIdentificationCode=[26,2]
-            self.NSummedTraces=[28,2]
-            self.NStackedTraces=[30,2]
-            self.DataUse=[32,2]
+
+            self.TraceIdentificationCode=[28,2]
+            self.NSummedTraces=[30,2]
+            self.NStackedTraces=[32,2]
+            self.DataUse=[34,2]
+
             self.offset=[36,4]
             self.ReceiverGroupElevation=[40,4]
             self.SourceSurfaceElevation=[44,4]
@@ -54,86 +58,115 @@ class TraceBinHead():
             self.SourceDatumElevation =[56,4]
             self.SourceWaterDepth=[60,4]
             self.GroupWaterDepth=[64,4]
+
             self.ElevationScalar =[68,2]
             self.SourceGroupScalar=[70,2]
             self.SourceX=[72,4]
             self.SourceY=[76,4]
             self.GroupX=[80,4]
             self.GroupY=[84,4]
+
             self.CoordinateUnits=[88,2]
             self.WeatheringVelocity=[90,2]
             self.SubWeatheringVelocity=[92,2]
             self.SourceUpholeTime=[94,2]
             self.GroupUpholeTime=[96,2]
             self.SourceStaticCorrection=[98,2]
+
             self.GroupStaticCorrection=[100,2]
             self.TotalStaticApplied=[102,2]
             self.LagTimeA =[104,2]
             self.LagTimeB =[106,2]
             self.DelayRecordingTime=[108,2]
             self.MuteTimeStart=[110,2]
+
             self.MuteTimeEND=[112,2]
             self.TRACE_SAMPLE_COUNT=[114,2]
             self.TRACE_SAMPLE_INTERVAL=[116,2]
             self.GainType=[118,2]
             self.InstrumentGainConstant=[120,2]
             self.InstrumentInitialGain=[122,2]
+
             self.Correlated=[124,2]
             self.SweepFrequencyStart=[126,2]
             self.SweepFrequencyEnd=[128,2]
             self.SweepLength=[130,2]
             self.SweepType=[132,2]
             self.SweepTraceTaperLengthStart=[134,2]
+
             self.SweepTraceTaperLengthEnd =[136,2]
             self.TaperType=[138,2]
             self.AliasFilterFrequency=[140,2]
             self.AliasFilterSlope=[142,2]
             self.NotchFilterFrequency =[144,2]
             self.NotchFilterSlope =[146,2]
+
             self.LowCutFrequency =[148,2]
             self.HighCutFrequency =[150,2]
             self.LowCutSlope =[152,2]
             self.HighCutSlope =[154,2]
             self.YearDataRecorded =[156,2]
             self.DayOfYear =[158,2]
+
             self.HourOfDay=[160,2]
             self.MinuteOfHour=[162,2]
             self.SecondOfMinute =[164,2]
             self.TimeBaseCode=[166,2]
             self.TraceWeightingFactor=[168,2]
             self.GeophoneGroupNumberRoll1=[170,2]
+
             self.GeophoneGroupNumberFirstTraceOrigField=[172,2]
             self.GeophoneGroupNumberLastTraceOrigField=[174,2]
             self.GapSize=[176,2]
             self.OverTravel=[178,2]
             self.CDP_X=[180,4]
             self.CDP_Y=[184,4]
+
             self.ILINE_NO=[188,4]
             self.XLINE_NO=[192,4]
             self.ShortpointNumber=[196,4]
             self.ScalarValueForShortpointNumber=[200,2]
             self.TraceValueMeasurementUnit=[202,2]
             self.TransductionConstant=[204,6]
-            self.spare = [210, 60]
-            
-            
-            
+
+            self.TransductionUnits=[210,2]
+            self.DeviceIdentifier=[212,2]
+            self.ScalarToTimes=[214,2]
+            self.SourceType=[216,2]
+            self.SourceEnergyDirection=[218,6]
+            self.SourceMeasurement=[224,6]
+
+            self.SourceMeasurementUnit=[230,2]
+            self.ex1=[232,4]
+            self.ex2=[236,4]
+
 
     def get_all_trace(self,list_trace_head_bin,order):
-        trace={}
+        if order == "big":
+            order_ = ">"
+        else:
+            order_ = "<"
+        keys = self.__dict__.keys()
+        first_part = np.frombuffer(list_trace_head_bin,dtype=order_ + "i4",count=7,offset=0)
+        second_part = np.frombuffer(list_trace_head_bin,dtype=">i2",count=4,offset=28)
+        third_part = np.frombuffer(list_trace_head_bin,count=8,offset=36,dtype=order_ + "i4")
+        fouth_part = np.frombuffer(list_trace_head_bin,count=2,offset=68,dtype=order_ + "i2")
+        fifth_part = np.frombuffer(list_trace_head_bin,count=4,offset=72,dtype=order_ + "i4")
+        six_part =   np.frombuffer(list_trace_head_bin,count=46,offset=88,dtype=order_ + "i2")
+        seven_part = np.frombuffer(list_trace_head_bin,count =5,offset=180,dtype=order_ + "i4")
+        eight_part = np.frombuffer(list_trace_head_bin,count =2,offset=200,dtype=order_ + "i2")
+        nine_part= [int.from_bytes(list_trace_head_bin[204:210],byteorder=order,signed=True)]
+        ten_part =   np.frombuffer(list_trace_head_bin,count=4,offset=210,dtype=order_ + "i2")
+        elev_part=   [int.from_bytes(list_trace_head_bin[218:224],byteorder=order,signed=True)]
+        twelve_part=[int.from_bytes(list_trace_head_bin[224:230],byteorder=order,signed=True)]
+        thirteen_part=  np.frombuffer(list_trace_head_bin,count =1,offset=230,dtype=order_ + "i2")
+        fourteen_part =   np.frombuffer(list_trace_head_bin,count =2,offset=232,dtype=order_ + "i4")
+        data=np.concatenate((first_part, second_part, third_part, fouth_part,
+                             fifth_part, six_part, seven_part, eight_part,
+                             nine_part, ten_part, elev_part, twelve_part,
+                             thirteen_part, fourteen_part))
+        trace=dict(zip(keys,data))
         iter=0
-        flag=True
-        for i,k in self.__dict__.items():
-            if(i=="CoordinateUnits" or not flag and iter<46):
-                if(flag):
-                    arr = np.frombuffer(list_trace_head_bin[88:180],dtype=">i2")
-                    flag=False
-                trace[i]=arr[iter]
-                iter+=1
-                continue
-            trace[i]=int.from_bytes(list_trace_head_bin[k[0]:k[0]+k[1]],byteorder=order,signed=True)#order,signed=True)#(np.frombuffer(buffer=list_trace_head_bin[k[0]:k[0]+k[1]],dtype=dt)[0])#int.from_bytes(list_trace_head_bin[k[0]:k[0]+k[1]],byteorder=order,signed=True)#order,signed=True)
-
-        trace["spare"] = int.from_bytes(list_trace_head_bin[180:180 + 60], byteorder=order, signed=True)
         return trace
     def get_specific_trace(self,f,order,cur,a:list=None):
         data={}
@@ -189,23 +222,35 @@ def writeTraceHead(f,Headers,order):
         order_=">"
     else:
         order_="<"
-  #  print(Headers.items())
-    for i,k in Headers.items():
-     #   print(type(k))
-        if (i == "CoordinateUnits"):
-            break
-        if(i=="spare"):
-            a+=(int(k).to_bytes(60, order, signed=True))
-            continue
-        if(i in four_bytes):
-           a+=(np.array(k,dtype=order_+"i4").tobytes())
-           #       sample.append(np.frombuffer(k,dtype=np.int32))#
-        else:
-            a += (np.array(k, dtype=order_ + "i2").tobytes())
-    #print(Headers.values[26:-2:])
-
-    a += np.array(list(Headers.values()))[25:-1:].astype(order_+"i2").tobytes()
-    a += list(Headers.values())[-1].to_bytes(60, order, signed=True)
+    data = list(Headers.values())
+    first_part = np.array(data[0:7], dtype=order_ + "i4").tobytes()
+    second_part = np.array(data[7:11], dtype=">i2").tobytes()
+    third_part = np.array(data[11:19], dtype=order_ + "i4").tobytes()
+    fouth_part = np.array(data[19:21], dtype=order_ + "i2").tobytes()
+    fifth_part = np.array(data[21:25],  dtype=order_ + "i4").tobytes()
+    six_part = np.array(data[25:71], dtype=order_ + "i2").tobytes()
+    seven_part = np.array(data[71:76],  dtype=order_ + "i4").tobytes()
+    eight_part = np.array(data[76:78],  dtype=order_ + "i2").tobytes()
+    nine_part =[data[78]][0].to_bytes(6,order, signed=True)#, byteorder=order, signed=True)]
+    ten_part = np.array(data[79:83],  dtype=order_ + "i2").tobytes()
+    elev_part = [data[84]][0].to_bytes(6,order, signed=True)
+    twelve_part =  [data[85]][0].to_bytes(6,order, signed=True)
+    thirteen_part = np.array(data[86], dtype=order_ + "i2").tobytes()
+    fourteen_part = np.array(data[87:], dtype=order_ + "i4").tobytes()
+    a=first_part+second_part+third_part+fouth_part+fifth_part+six_part
+    a+=seven_part+eight_part+nine_part+ten_part+elev_part+twelve_part+thirteen_part+fourteen_part
+    # for i,k in Headers.items():
+    #     if (i == "CoordinateUnits"):
+    #         break
+    #     if(i in four_bytes):
+    #        a+=(np.array(k,dtype=order_+"i4").tobytes())
+    #        #       sample.append(np.frombuffer(k,dtype=np.int32))#
+    #     else:
+    #         a += (np.array(k, dtype=order_ + "i2").tobytes())
+    # #print(Headers.values[26:-2:])
+    #
+    # a += np.array(list(Headers.values()))[25:-1:].astype(order_+"i2").tobytes()
+    # a += list(Headers.values())[-1].to_bytes(60, order, signed=True)
     return  a
 
 def writeData(f,Data,coef,order):
