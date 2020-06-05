@@ -239,18 +239,6 @@ def writeTraceHead(f,Headers,order):
     fourteen_part = np.array(data[87:], dtype=order_ + "i4").tobytes()
     a=first_part+second_part+third_part+fouth_part+fifth_part+six_part
     a+=seven_part+eight_part+nine_part+ten_part+elev_part+twelve_part+thirteen_part+fourteen_part
-    # for i,k in Headers.items():
-    #     if (i == "CoordinateUnits"):
-    #         break
-    #     if(i in four_bytes):
-    #        a+=(np.array(k,dtype=order_+"i4").tobytes())
-    #        #       sample.append(np.frombuffer(k,dtype=np.int32))#
-    #     else:
-    #         a += (np.array(k, dtype=order_ + "i2").tobytes())
-    # #print(Headers.values[26:-2:])
-    #
-    # a += np.array(list(Headers.values()))[25:-1:].astype(order_+"i2").tobytes()
-    # a += list(Headers.values())[-1].to_bytes(60, order, signed=True)
     return  a
 
 def writeData(f,Data,coef,order):
