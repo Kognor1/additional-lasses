@@ -1,5 +1,6 @@
 import numpy as np
-
+from math import pow
+import decimal
 class BinHead():
 
     def __init__(self, list_header_bin,order):
@@ -133,7 +134,9 @@ class TraceBinHead():
             self.DeviceIdentifier=[212,2]
             self.ScalarToTimes=[214,2]
             self.SourceType=[216,2]
-            self.SourceEnergyDirection=[218,6]
+            self.SourceEnergyDirectionVerticalOrientation=[218,2]
+            self.SourceEnergyDirectionCrossLineOrientation = [220, 2]
+            self.SourceEnergyDirectionInLineOrientation = [222, 2]
             self.SourceMeasurement=[224,6]
 
             self.SourceMeasurementUnit=[230,2]
@@ -155,10 +158,18 @@ class TraceBinHead():
         six_part =   np.frombuffer(list_trace_head_bin,count=46,offset=88,dtype=order_ + "i2")
         seven_part = np.frombuffer(list_trace_head_bin,count =5,offset=180,dtype=order_ + "i4")
         eight_part = np.frombuffer(list_trace_head_bin,count =2,offset=200,dtype=order_ + "i2")
-        nine_part= [int.from_bytes(list_trace_head_bin[204:210],byteorder=order,signed=True)]
+        mantisa=int.from_bytes(list_trace_head_bin[204:208],byteorder=order,signed=True)
+        exponent = int.from_bytes(list_trace_head_bin[208:210],byteorder=order,signed=True)
+        nine_part= [mantisa * pow(10,exponent)]
+
         ten_part =   np.frombuffer(list_trace_head_bin,count=4,offset=210,dtype=order_ + "i2")
-        elev_part=   [int.from_bytes(list_trace_head_bin[218:224],byteorder=order,signed=True)]
-        twelve_part=[int.from_bytes(list_trace_head_bin[224:230],byteorder=order,signed=True)]
+
+        elev_part=  np.frombuffer(list_trace_head_bin,count =3,offset=218,dtype=order_ + "i2")
+
+
+        twelve_part=[int.from_bytes(list_trace_head_bin[224:228],byteorder=order,signed=True)*
+                    pow(10,int.from_bytes(list_trace_head_bin[228:230],byteorder=order,signed=True))]
+
         thirteen_part=  np.frombuffer(list_trace_head_bin,count =1,offset=230,dtype=order_ + "i2")
         fourteen_part =   np.frombuffer(list_trace_head_bin,count =2,offset=232,dtype=order_ + "i4")
         data=np.concatenate((first_part, second_part, third_part, fouth_part,
@@ -222,21 +233,44 @@ def writeTraceHead(f,Headers,order):
         order_=">"
     else:
         order_="<"
-    data = list(Headers.values())
+    data = list(Headers.values)
     first_part = np.array(data[0:7], dtype=order_ + "i4").tobytes()
     second_part = np.array(data[7:11], dtype=">i2").tobytes()
     third_part = np.array(data[11:19], dtype=order_ + "i4").tobytes()
+
     fouth_part = np.array(data[19:21], dtype=order_ + "i2").tobytes()
     fifth_part = np.array(data[21:25],  dtype=order_ + "i4").tobytes()
+
     six_part = np.array(data[25:71], dtype=order_ + "i2").tobytes()
     seven_part = np.array(data[71:76],  dtype=order_ + "i4").tobytes()
     eight_part = np.array(data[76:78],  dtype=order_ + "i2").tobytes()
-    nine_part =[data[78]][0].to_bytes(6,order, signed=True)#, byteorder=order, signed=True)]
+
+    num = format(decimal.Decimal(int(data[78])))
+    if num!="0":
+        mantisa=int(float(num[0:num.find("e")])).to_bytes(4,order, signed=True)
+        power = int(float(num[num.find("e") + 2:])).to_bytes(2, order, signed=True)
+    else:
+        mantisa = int(0).to_bytes(4,order, signed=True)
+        power =   int(0).to_bytes(2, order, signed=True)
+
+
+    nine_part=mantisa+power
     ten_part = np.array(data[79:83],  dtype=order_ + "i2").tobytes()
-    elev_part = [data[84]][0].to_bytes(6,order, signed=True)
-    twelve_part =  [data[85]][0].to_bytes(6,order, signed=True)
-    thirteen_part = np.array(data[86], dtype=order_ + "i2").tobytes()
-    fourteen_part = np.array(data[87:], dtype=order_ + "i4").tobytes()
+
+    elev_part = np.array(data[83:86],  dtype=order_ + "i2").tobytes()
+
+    num = format(decimal.Decimal(int(data[86])))
+    if num!="0":
+        mantisa=int(float(num[0:num.find("e")])).to_bytes(4,order, signed=True)
+        power = int(float(num[num.find("e") + 2:])).to_bytes(2, order, signed=True)
+    else:
+        mantisa = int(0).to_bytes(4,order, signed=True)
+        power =   int(0).to_bytes(2, order, signed=True)
+
+    twelve_part =  mantisa+power
+
+    thirteen_part = np.array(data[87], dtype=order_ + "i2").tobytes()
+    fourteen_part = np.array(data[88:], dtype=order_ + "i4").tobytes()
     a=first_part+second_part+third_part+fouth_part+fifth_part+six_part
     a+=seven_part+eight_part+nine_part+ten_part+elev_part+twelve_part+thirteen_part+fourteen_part
     return  a
