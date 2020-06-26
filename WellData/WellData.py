@@ -15,13 +15,14 @@ class WellData():
         """
         c= Converter()
         self.log = c.set_file(path)
+        self.well = self.log.well
         params_l=self.log.parameter
         try:
             
             loc = self.log.well["LOC"]["value"]
             self.well_X,self.well_Y=re.findall(r'\d+\.\d+',loc)
         except Exception as e:
-            raise Exception('Скорее всего отсутсвует поле loc, либо его формат неверен. Посмотрите stackTrace выше') from e
+            print('Скорее всего отсутсвует поле loc, либо его формат неверен. Посмотрите stackTrace выше')
         if(params!=None):
             self.heads={}
             for key,value in params.items():
@@ -39,7 +40,15 @@ class WellData():
             
             if(del_invalid):
                 self.data=self.data.dropna()
-    
+        else:
+            self.data = {}
+            for key, value in self.log.data.items():
+                self.__dict__[key] = self.log.data[key]
+                self.data[key] = self.__dict__[key]
+            self.data = pd.DataFrame(self.data)
+            if (del_invalid):
+                self.data = self.data.dropna()
+
     def convert_to_df_head(self):
         """
             func:
@@ -72,9 +81,20 @@ class WellData():
                 for i in including:
                     newdict[i]=self.__dict__[i]
                 return  pd.DataFrame(newdict)
+        temp = self.__dict__.copy()
+        try:
+            temp["heads"]=None
+            del temp["heads"]
+            temp["data"] = None
+            del temp["data"]
+            del temp["log"]
+            del temp["well"]
+        except Exception as e:
+            print(e)
+
         if(excluding):
                 newdict={}
-                for key,value in self.__dict__.items() :
+                for key,value in temp.items() :
                     if(key in excluding):
                         continue
                     else:
@@ -82,7 +102,7 @@ class WellData():
                 return  pd.DataFrame(newdict)
             
             
-        return pd.DataFrame(self.__dict__)
+        return pd.DataFrame(temp)
     
     def merge(self,well,left_on,right_on):
         """
