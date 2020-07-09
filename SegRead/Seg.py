@@ -29,10 +29,15 @@ class SegReader():
         self.sample_format=4
         self.type_float = None
     def get_lineHeader(self):
+    """ return sliceViewer """
         return self.line_header
     def get_bin_head(self):
+    """ return bin_head """
         return self.bin_head
     def open(self,path ):
+    """ open file 
+        path = path for file
+    """
         self.path=path
         self.f = open(self.path, "rb")
         self.f.seek(0, 0)
@@ -51,6 +56,7 @@ class SegReader():
                 msg = 'Unable to determine the endianness of the file. ' + \
                       'Please specify it.'
                 raise Exception(msg)
+        #Не всегда есть этот байт в данных
         # if (int.from_bytes(b_h[97:101:], "big") > 255):
         #     self.order = "little"
         # else:
@@ -62,10 +68,26 @@ class SegReader():
         self.count_trace = (size_file - 3600) / (self.bin_head.Samples * coef + 240)
         self.count_trace = int(self.count_trace)
     def read_all(self):
+        """ 
+        read and return all data from sgy
+        input
+            - 
+        return:    
+            data - sgy trace data
+            bin_head - binary head 
+            trace_head - dataFrame with trace head for data
+        """
         data , trace_head=self.get_data_and_trace_heads()
         self.f.close()
         return data, self.bin_head.__dict__,trace_head
     def get_step_count(self):
+        """ 
+        return sample count
+        input
+            - 
+        return:
+            step count - Trace Sample Count
+        """
         self.f.seek(3600, 0)
         trace_head = Heads.TraceBinHead()
         b = trace_head.get_all_trace(self.f.read(240), self.order)
@@ -73,12 +95,23 @@ class SegReader():
         self.f.seek(3600, 0)
         return step_count
     def __get_step_count(self):
-
+        """
+        inner function don't call
+        """
         trace_head = Heads.TraceBinHead()
         b = trace_head.get_all_trace(self.f.read(240), self.order)
         step_count = b["TRACE_SAMPLE_COUNT"]
         return step_count
+        
     def get_data(self,start=0,end=None):
+        """ 
+        return only data
+        input
+            start - start number line
+            end - end number line
+        return:
+            data - np.array with data
+        """    
         self.f.seek(3600, 0)
         step_count = self.__get_step_count()
         coef = self.check_coef()
@@ -100,7 +133,16 @@ class SegReader():
             sample=self.__get_sample(coef,datas)
             data.append(sample)
         return (np.array(data))
+        
     def get_data_and_trace_heads(self):
+        """ 
+        return data and trace heads without bin head
+        input
+          -
+        return:
+            data - np.array with data
+            trace head - dataFrame with trace heads
+        """    
         if( self.f == None):
             raise Exception("File not open. Use open('path')")
         self.f.seek(3600,0)
@@ -132,9 +174,19 @@ class SegReader():
         return self.data ,self.trace_bin_headers
     
     def create_data_frame(self,series):
+         """
+            create dataFrame with input series, where columns is Trace  Heads
+         input
+            series with data for Trace Head
+         return
+            res = dataFrame 
+         """
          res = pandas.DataFrame.from_dict(data=series,columns=Heads.TraceBinHead().__dict__.keys(),orient='index')
          return res
     def check_coef(self):
+    """
+        inner function dont call
+    """
         if (self.bin_head.Format == 3):
             coef = 2
         elif (self.bin_head.Format == 6 or self.bin_head.Format == 8):
@@ -150,6 +202,14 @@ class SegReader():
         return coef
     
     def delete_rows_cols(self,df):
+    """
+    delete none and zeros columns with dataFrame
+    input:
+        df - DataFrame
+    return:
+        df - new DataFrame
+    """
+    
         a = df.values
         mask = a!= 0
         m0 = mask.any(0)
@@ -158,14 +218,29 @@ class SegReader():
     
     
     def get_line_header(self):
+    """
+    return line header
+    input:
+         -
+    return:
+       line_header if exist,else None
+    """
         try:
               if self.line_header.decode("cp500")[0]=="C":
                   return self.line_header.decode("cp500"),1
               else:
                   return self.line_header.decode("cp1251"),0
         except Exception as e:
-              res= self.line_header
+              return None
     def print_line_header(self):
+    """
+    print line header
+    input:
+         -
+    return:
+         -
+    """ 
+    
         Line_header_decode,id=self.get_line_header()
         if(id==0):
             print(Line_header_decode)
@@ -199,6 +274,9 @@ class SegReader():
               self.f.seek(step_count*self.check_coef(),1)
         return  pandas.DataFrame(all)
     def load_all_file(self,path):
+    """
+        inner function dont use 
+    """
         with open(path ,"r+b") as f:
             self.f = mmap(f.fileno(), 0)
             self.f.seek(0, 0)
@@ -216,6 +294,9 @@ class SegReader():
             self.count_trace = int(self.count_trace)
            # self.f.close()
     def __get_sample(self,coef,datas):
+    """
+        inner function don`t call
+    """
         sample=[]
         if (coef == 2):
             sample = np.frombuffer(datas, dtype=np.int16)
@@ -249,12 +330,37 @@ class SegReader():
 
 
 def get_names():
+"""
+inner function return trace head name
+"""
         return trace_head_names
 def create_head_traces(dict):
+"""
+    create dataframe from dict with head trace
+inner:
+    dict - dict with data
+return: 
+    new dataFrame
+"""
         heads = DataFrame(dict, columns=get_names())
         heads = heads.fillna(0)
         return heads
 def write(filename, Data,SegyTraceHeaders=pandas.DataFrame(), SegyHeader=None, text_head=None,order="big",dt=1000,SampleFormat=3):
+"""
+    write segy file
+input:
+    filename - name new file
+    Data - segy data for write
+    SegyTraceHeaders - trace heads for write
+    SegyHeader - bin head for write
+    text_head - text header 
+    order - byte order "little" or "big"
+    dt - delta time 
+    SampleFormat - sample format for write
+return :
+        None
+        create new file in directory 
+"""
         print("START WRITE")
         if (isinstance(SegyTraceHeaders, dict)):
             SegyTraceHeaders = create_head_traces(SegyTraceHeaders)
@@ -309,6 +415,9 @@ def write(filename, Data,SegyTraceHeaders=pandas.DataFrame(), SegyHeader=None, t
 
 
 def retCoef(SampleFormat):
+"""
+    inner function don`t call
+"""
     if (SampleFormat == 3):
         coef = 2
     elif (SampleFormat == 6 or SampleFormat == 8):
@@ -325,6 +434,9 @@ def retCoef(SampleFormat):
 
 
 def get_null_trace():
+    """
+        inner function
+    """
     ar = Heads.TraceBinHead()
     for i,k in ar.__dict__.items():
         ar.__dict__[i]=0

@@ -2,7 +2,9 @@ import numpy as np
 from math import pow
 import decimal
 class BinHead():
-
+    """
+    Class for storage bin head
+    """
     def __init__(self, list_header_bin,order):
         self.JobId = int.from_bytes(list_header_bin[0:4:], order,signed=True)
         self.LineNumber = int.from_bytes(list_header_bin[4:8:], order,signed=True)
@@ -37,6 +39,9 @@ class BinHead():
 
 
 class TraceBinHead():
+"""
+    Class for storage Trace head
+    """
     def __init__(self):
             self.TRACE_SEQUENCE_LINE =[0,4]
             self.TRACE_SEQUENCE_FILE=[4,4]
@@ -145,6 +150,9 @@ class TraceBinHead():
 
 
     def get_all_trace(self,list_trace_head_bin,order):
+        """
+            inner function to parse data from trace header
+        """
         if order == "big":
             order_ = ">"
         else:
@@ -190,6 +198,10 @@ class TraceBinHead():
                 data[i]=int.from_bytes(f.read(fields[i][1]),order,signed=True)
         return data
 
+
+"""
+    list four bytes fields
+"""
 four_bytes={"JobId","LineNumber","ReelNumber","order",
             "TRACE_SEQUENCE_LINE","TRACE_SEQUENCE_FILE","FieldRecord","TraceNumber",
             "EnergySourcePoint","CDP","CDP_TRACE","offset",
@@ -197,7 +209,12 @@ four_bytes={"JobId","LineNumber","ReelNumber","order",
             "SourceDatumElevation","SourceWaterDepth","GroupWaterDepth",
             "SourceX","SourceY","GroupX","GroupY"}
 
+
+
 def writeBinHead(f,Headers,order):
+"""
+    inner function to write binHead, don`t call
+"""
     bytes=0
     for i,k in Headers.__dict__.items():
         if (i == "order"):
@@ -213,6 +230,9 @@ def writeBinHead(f,Headers,order):
             f.write(k.to_bytes(2,order))
             bytes+=2
 def writeTraceHeadEmpty(f,Headers,order):
+"""
+    inner function to write TraceHeadEmpty, don`t call
+"""
     a = bytearray(240)
     print(type(Headers))
     for i,k in Headers.__dict__.items():
@@ -227,6 +247,9 @@ def writeTraceHeadEmpty(f,Headers,order):
 
     return  a
 def writeTraceHead(f,Headers,order):
+"""
+    inner function to write TraceHead, don`t call
+"""
     order_ = ">"
     a=bytes()
     if order=="big":
@@ -276,6 +299,9 @@ def writeTraceHead(f,Headers,order):
     return  a
 
 def writeData(f,Data,coef,order):
+"""
+   inner function  write  data in new segy file
+"""
     res =None
     if ("int" in str(type(Data[0]))):
        return(Data.astype(int).tobytes())
