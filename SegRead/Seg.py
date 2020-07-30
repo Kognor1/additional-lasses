@@ -29,15 +29,15 @@ class SegReader():
         self.sample_format=4
         self.type_float = None
     def get_lineHeader(self):
-    """ return sliceViewer """
+        """ return sliceViewer """
         return self.line_header
     def get_bin_head(self):
-    """ return bin_head """
+        """ return bin_head """
         return self.bin_head
     def open(self,path ):
-    """ open file 
+        """ open file
         path = path for file
-    """
+        """
         self.path=path
         self.f = open(self.path, "rb")
         self.f.seek(0, 0)
@@ -184,9 +184,9 @@ class SegReader():
          res = pandas.DataFrame.from_dict(data=series,columns=Heads.TraceBinHead().__dict__.keys(),orient='index')
          return res
     def check_coef(self):
-    """
-        inner function dont call
-    """
+        """
+            inner function dont call
+        """
         if (self.bin_head.Format == 3):
             coef = 2
         elif (self.bin_head.Format == 6 or self.bin_head.Format == 8):
@@ -202,13 +202,13 @@ class SegReader():
         return coef
     
     def delete_rows_cols(self,df):
-    """
-    delete none and zeros columns with dataFrame
-    input:
-        df - DataFrame
-    return:
-        df - new DataFrame
-    """
+        """
+        delete none and zeros columns with dataFrame
+        input:
+            df - DataFrame
+        return:
+            df - new DataFrame
+        """
     
         a = df.values
         mask = a!= 0
@@ -218,13 +218,13 @@ class SegReader():
     
     
     def get_line_header(self):
-    """
-    return line header
-    input:
-         -
-    return:
-       line_header if exist,else None
-    """
+        """
+        return line header
+        input:
+             -
+        return:
+           line_header if exist,else None
+        """
         try:
               if self.line_header.decode("cp500")[0]=="C":
                   return self.line_header.decode("cp500"),1
@@ -233,13 +233,13 @@ class SegReader():
         except Exception as e:
               return None
     def print_line_header(self):
-    """
-    print line header
-    input:
-         -
-    return:
-         -
-    """ 
+        """
+        print line header
+        input:
+             -
+        return:
+             -
+        """
     
         Line_header_decode,id=self.get_line_header()
         if(id==0):
@@ -274,9 +274,9 @@ class SegReader():
               self.f.seek(step_count*self.check_coef(),1)
         return  pandas.DataFrame(all)
     def load_all_file(self,path):
-    """
-        inner function dont use 
-    """
+        """
+            inner function dont use
+        """
         with open(path ,"r+b") as f:
             self.f = mmap(f.fileno(), 0)
             self.f.seek(0, 0)
@@ -294,9 +294,9 @@ class SegReader():
             self.count_trace = int(self.count_trace)
            # self.f.close()
     def __get_sample(self,coef,datas):
-    """
-        inner function don`t call
-    """
+        """
+            inner function don`t call
+        """
         sample=[]
         if (coef == 2):
             sample = np.frombuffer(datas, dtype=np.int16)
@@ -330,37 +330,37 @@ class SegReader():
 
 
 def get_names():
-"""
-inner function return trace head name
-"""
+        """
+        inner function return trace head name
+        """
         return trace_head_names
 def create_head_traces(dict):
-"""
-    create dataframe from dict with head trace
-inner:
-    dict - dict with data
-return: 
-    new dataFrame
-"""
+        """
+            create dataframe from dict with head trace
+        inner:
+            dict - dict with data
+        return:
+            new dataFrame
+        """
         heads = DataFrame(dict, columns=get_names())
         heads = heads.fillna(0)
         return heads
 def write(filename, Data,SegyTraceHeaders=pandas.DataFrame(), SegyHeader=None, text_head=None,order="big",dt=1000,SampleFormat=3):
-"""
-    write segy file
-input:
-    filename - name new file
-    Data - segy data for write
-    SegyTraceHeaders - trace heads for write
-    SegyHeader - bin head for write
-    text_head - text header 
-    order - byte order "little" or "big"
-    dt - delta time 
-    SampleFormat - sample format for write
-return :
-        None
-        create new file in directory 
-"""
+        """
+            write segy file
+        input:
+            filename - name new file
+            Data - segy data for write
+            SegyTraceHeaders - trace heads for write
+            SegyHeader - bin head for write
+            text_head - text header
+            order - byte order "little" or "big"
+            dt - delta time
+            SampleFormat - sample format for write
+        return :
+                None
+                create new file in directory
+        """
         print("START WRITE")
         if (isinstance(SegyTraceHeaders, dict)):
             SegyTraceHeaders = create_head_traces(SegyTraceHeaders)
@@ -415,9 +415,9 @@ return :
 
 
 def retCoef(SampleFormat):
-"""
-    inner function don`t call
-"""
+    """
+        inner function don`t call
+    """
     if (SampleFormat == 3):
         coef = 2
     elif (SampleFormat == 6 or SampleFormat == 8):

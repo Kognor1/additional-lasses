@@ -39,7 +39,7 @@ class BinHead():
 
 
 class TraceBinHead():
-"""
+    """
     Class for storage Trace head
     """
     def __init__(self):
@@ -212,9 +212,9 @@ four_bytes={"JobId","LineNumber","ReelNumber","order",
 
 
 def writeBinHead(f,Headers,order):
-"""
-    inner function to write binHead, don`t call
-"""
+    """
+        inner function to write binHead, don`t call
+    """
     bytes=0
     for i,k in Headers.__dict__.items():
         if (i == "order"):
@@ -230,9 +230,9 @@ def writeBinHead(f,Headers,order):
             f.write(k.to_bytes(2,order))
             bytes+=2
 def writeTraceHeadEmpty(f,Headers,order):
-"""
-    inner function to write TraceHeadEmpty, don`t call
-"""
+    """
+        inner function to write TraceHeadEmpty, don`t call
+    """
     a = bytearray(240)
     print(type(Headers))
     for i,k in Headers.__dict__.items():
@@ -247,9 +247,9 @@ def writeTraceHeadEmpty(f,Headers,order):
 
     return  a
 def writeTraceHead(f,Headers,order):
-"""
-    inner function to write TraceHead, don`t call
-"""
+    """
+        inner function to write TraceHead, don`t call
+    """
     order_ = ">"
     a=bytes()
     if order=="big":
@@ -299,9 +299,9 @@ def writeTraceHead(f,Headers,order):
     return  a
 
 def writeData(f,Data,coef,order):
-"""
-   inner function  write  data in new segy file
-"""
+    """
+       inner function  write  data in new segy file
+    """
     res =None
     if ("int" in str(type(Data[0]))):
        return(Data.astype(int).tobytes())
